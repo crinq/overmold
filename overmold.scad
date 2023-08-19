@@ -76,6 +76,7 @@ module make_mold(xm, xp, ym, yp, zm, zp, align = [0, 0, 0, 0]){
 }
 
 function vlen(vec) = is_list(vec) ? len(vec) : 1;
+function slen(vec) = is_string(vec) ? len(vec) : 1;
 function vec_sum(vec, c = 0) = c < vlen(vec) - 1 ? vec[c] + vec_sum(vec, c + 1) : vec[c];
 function sub_vec(vec, start, end) = [for(i = [start : vlen(vec) - 1 - end]) vec[i]];
 function vec_r_sum(vec) = vlen(vec) == 1 ? 0 : vec[0] + vec[1] + vec_r_sum(sub_vec(vec, 1, 0));
@@ -235,7 +236,7 @@ module label(wire_in, text_in, mold_r, text_l, text_h, text_t, dist, size, punch
       translate([0, wire_size[0] / 2 + mold_r + text_h / 2, -punch * text_t]) dice(text_in, size = size / 10, t = text_t * 3);
     }
     else{
-      translate([0, wire_size[0] / 2 + mold_r + text_h / 2, -punch * text_t]) linear_extrude(text_t * 3) text(text_in, halign = "center", valign = "center", size = size);
+      #translate([0, wire_size[0] / 2 + mold_r + text_h / 2, -punch * text_t]) linear_extrude(text_t * 2) text(text_in, halign = "center", valign = "center", size = size);
     }
   }
 }
@@ -356,11 +357,13 @@ module make_T_junction(wire_left, wire_right, wire_up, mold_r, mold_l, dist = [0
 //            \____________/              //
 //                                        //
 ////////////////////////////////////////////
-module make_label(wire_in, text_in, mold_r, text_l, text_h, text_t, dist = 0, size = 4, punch = 0){
+module make_label(wire_in, text_in, mold_r, text_l = 5, text_h = 5, text_t, dist = 0, size = 4, punch = 0){
   wire_size = calc_wire_size(wire_in, dist);
   wire_max_r = wire_size[1];
   mold_r = max(mold_r, wire_max_r + min_overmold);
   wire_max_y = wire_size[0] + mold_r * 2;
+  
+  text_l = max(text_l, text_h, slen(text_in) * 3.3);
   
   xm = max(text_l / 2 + mold_r + wire_seal_l, runner_r + wall_t);
   xp = max(text_l / 2 + mold_r + wire_seal_l, runner_r + wall_t);
@@ -368,7 +371,7 @@ module make_label(wire_in, text_in, mold_r, text_l, text_h, text_t, dist = 0, si
   yp = wire_max_y / 2 + text_h + wall_t;
   zm = max(mold_r + wall_t, runner_r + wall_t);
   zp = zm;
-  
+
   make_mold(xm, xp, ym, yp, zm, zp, align){
     label(wire_in, text_in, mold_r, text_l, text_h, text_t, dist, size, punch);
     runner_gate(wire_max_y / 2);
@@ -418,7 +421,8 @@ module make_grommet(wire_left, wire_right, mold_r, mold_l, dist = [0, 0]){
 //make_T_junction(wire_left = [0.62, 0.62], wire_right = [0.62, 0.62], wire_up = [2.25], mold_r = 5, mold_l = [7.5, 7.5, 7.5], dist = [0.5, 0.5, 0.5]);
 //make_grommet(wire_left = [1.5, 1.5, 0.62, 0.62], wire_right = [3], mold_r = [7.5, 5, 5, 4], mold_l = [1.5, 2, 20], dist = [0.5, 0.5]);
 
-make_label(wire_in = [0.5, 0.5], text_in = "+", mold_r = 1, text_l = 5, text_h = 5, text_t = 1, dist = 1, size = 4, punch = 1);
+//make_label(wire_in = [0.5, 0.5], text_in = "test", mold_r = 1, text_l = 5, text_h = 5, text_t = 1, dist = 1, size = 4, punch = 0);
+make_label(wire_in = [0.5, 0.5], text_in = "+", mold_r = 1, text_t = 1, dist = 1, size = 4, punch = 1);
 //translate([0, 70, 0]) make_label(wire_in = [0.5, 0.5], text_in = "+", mold_r = 1, text_l = 7.5, text_h = 7.5, text_t = 1, dist = 1, size = 5, punch = 1);
 //translate([20, 70, 0]) make_label(wire_in = [0.5, 0.5], text_in = "-", mold_r = 1, text_l = 7.5, text_h = 7.5, text_t = 1, dist = 1, size = 5, punch = 1);
 //translate([50, 70, 0]) make_label(wire_in = [0.5, 0.5], text_in = "3.3V", mold_r = 1, text_l = 17.5, text_h = 7.5, text_t = 1, dist = 1, size = 5, punch = 0);
